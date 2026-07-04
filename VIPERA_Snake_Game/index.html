@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <title>Vipera — A Modern Classic, Reimagined</title>
+  <meta name="description" content="Vipera is a premium, browser-based reimagining of the classic Snake game — fluid 60 FPS gameplay, three difficulty levels, and a bright glassmorphic interface. Play free, no download." />
+  <meta name="keywords" content="snake game, browser game, free online game, classic snake, arcade game" />
+  <meta name="theme-color" content="#0FBF8F" />
+  <meta name="color-scheme" content="light" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Vipera — A Modern Classic, Reimagined" />
+  <meta property="og:description" content="A premium browser reimagining of Snake. Bright, fluid, and free to play." />
+  <meta property="og:type" content="website" />
+
+  <!-- Favicon (inline SVG, zero extra request) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2310B981'/%3E%3Cstop offset='1' stop-color='%2306B6D4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect rx='24' width='100' height='100' fill='url(%23g)'/%3E%3Ccircle cx='36' cy='40' r='9' fill='white'/%3E%3Ccircle cx='36' cy='40' r='4' fill='%23111'/%3E%3Cpath d='M30 60c10 14 30 14 40 0' stroke='white' stroke-width='9' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <!-- Fonts: Outfit (display), Inter (UI/body), JetBrains Mono (data/score) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Ambient aurora background: purely decorative, sits behind everything -->
+  <div class="aurora" aria-hidden="true">
+    <span class="aurora__blob aurora__blob--emerald"></span>
+    <span class="aurora__blob aurora__blob--blue"></span>
+    <span class="aurora__blob aurora__blob--cyan"></span>
+  </div>
+  <canvas id="particles" class="particles-canvas" aria-hidden="true"></canvas>
+
+  <!-- Skip link for keyboard / screen-reader users -->
+  <a class="skip-link" href="#main">Skip to game</a>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <svg class="topbar__logo" width="34" height="34" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#10B981" />
+            <stop offset="1" stop-color="#06B6D4" />
+          </linearGradient>
+        </defs>
+        <rect rx="24" width="100" height="100" fill="url(#logoGrad)" />
+        <circle cx="36" cy="40" r="9" fill="white" />
+        <circle cx="36" cy="40" r="4" fill="#0B1220" />
+        <path d="M30 60c10 14 30 14 40 0" stroke="white" stroke-width="9" fill="none" stroke-linecap="round" />
+      </svg>
+      <span class="topbar__title">Vipera</span>
+    </div>
+    <div class="topbar__actions">
+      <button id="btn-sound" class="icon-btn" type="button" aria-pressed="true" aria-label="Toggle sound effects">
+        <svg class="icon icon-sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M19 6a9 9 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.6"/></svg>
+        <svg class="icon icon-sound-off" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <button id="btn-settings" class="icon-btn" type="button" aria-haspopup="dialog" aria-controls="settings-modal" aria-label="Open settings">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M19.4 13.5a1.8 1.8 0 0 0 .36 1.98l.06.06a2.17 2.17 0 1 1-3.07 3.07l-.06-.06a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V20a2.17 2.17 0 1 1-4.33 0v-.09a1.8 1.8 0 0 0-1.18-1.65 1.8 1.8 0 0 0-1.98.36l-.06.06a2.17 2.17 0 1 1-3.07-3.07l.06-.06a1.8 1.8 0 0 0 .36-1.98 1.8 1.8 0 0 0-1.65-1.1H2a2.17 2.17 0 1 1 0-4.33h.09a1.8 1.8 0 0 0 1.65-1.18 1.8 1.8 0 0 0-.36-1.98l-.06-.06A2.17 2.17 0 1 1 6.4 3.55l.06.06a1.8 1.8 0 0 0 1.98.36H8.5a1.8 1.8 0 0 0 1.1-1.65V2a2.17 2.17 0 1 1 4.33 0v.09a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.06-.06a2.17 2.17 0 1 1 3.07 3.07l-.06.06a1.8 1.8 0 0 0-.36 1.98v.07a1.8 1.8 0 0 0 1.65 1.1H22a2.17 2.17 0 1 1 0 4.33h-.09a1.8 1.8 0 0 0-1.65 1.1z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="btn-fullscreen" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle fullscreen">
+        <svg class="icon icon-fs-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="icon icon-fs-exit" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HOME SCREEN ============ -->
+    <section id="screen-home" class="screen screen--home" aria-labelledby="home-heading">
+      <div class="home__hero">
+        <div class="home__badge" aria-hidden="true">
+          <span class="home__badge-dot"></span> New · Three difficulty modes
+        </div>
+
+        <h1 id="home-heading" class="home__title">
+          <span class="home__title-word">Vip<span class="home__title-tail">era</span></span>
+        </h1>
+        <p class="home__tagline">A modern classic, reimagined. Bright, fast, and beautifully simple.</p>
+
+        <!-- Signature element: living snake that slithers along a path behind the CTA -->
+        <div class="hero-stage" aria-hidden="true">
+          <svg class="hero-stage__path" viewBox="0 0 600 160" preserveAspectRatio="none">
+            <path id="viperPath" d="M10,120 C 100,20 180,150 260,80 S 420,10 480,90 S 560,140 590,60" fill="none"/>
+          </svg>
+          <canvas id="heroSnake" class="hero-stage__canvas"></canvas>
+        </div>
+
+        <div class="home__cta-group">
+          <button id="btn-play" class="btn btn--primary btn--xl" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 5v14l12-7-12-7z" fill="currentColor"/></svg>
+            Play Now
+          </button>
+          <button id="btn-howto" class="btn btn--ghost" type="button" aria-haspopup="dialog" aria-controls="howto-modal">How to play</button>
+        </div>
+
+        <fieldset class="difficulty-picker" id="difficulty-picker">
+          <legend class="difficulty-picker__legend">Difficulty</legend>
+          <label class="chip">
+            <input type="radio" name="difficulty" value="easy" />
+            <span>Easy</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="difficulty" value="medium" checked />
+            <span>Medium</span>
+          </label>
+          <label class="chip">
+            <input type="radio" name="difficulty" value="hard" />
+            <span>Hard</span>
+          </label>
+        </fieldset>
+
+        <div class="home__stats" role="group" aria-label="Your scores">
+          <div class="stat-card glass">
+            <span class="stat-card__label">High Score</span>
+            <span id="home-highscore" class="stat-card__value">0</span>
+          </div>
+          <div class="stat-card glass">
+            <span class="stat-card__label">Games Played</span>
+            <span id="home-games-played" class="stat-card__value">0</span>
+          </div>
+          <div class="stat-card glass">
+            <span class="stat-card__label">Best Streak</span>
+            <span id="home-best-streak" class="stat-card__value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="site-footer">
+        <p>Built with HTML5 canvas · No download, no signup · Your data stays on this device</p>
+      </footer>
+    </section>
+
+    <!-- ============ GAME SCREEN ============ -->
+    <section id="screen-game" class="screen screen--game" hidden aria-labelledby="game-heading">
+      <h1 id="game-heading" class="sr-only">Vipera — Playing</h1>
+
+      <div class="hud glass">
+        <button id="btn-home" class="icon-btn icon-btn--sm" type="button" aria-label="Return to home screen">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 4l8 7.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="hud__scores">
+          <div class="hud__score-block">
+            <span class="hud__score-label">Score</span>
+            <span id="hud-score" class="hud__score-value">0</span>
+          </div>
+          <div class="hud__divider" aria-hidden="true"></div>
+          <div class="hud__score-block hud__score-block--muted">
+            <span class="hud__score-label">Best</span>
+            <span id="hud-highscore" class="hud__score-value">0</span>
+          </div>
+        </div>
+
+        <div class="hud__badges">
+          <span id="hud-difficulty" class="badge badge--medium">Medium</span>
+        </div>
+
+        <button id="btn-pause" class="icon-btn icon-btn--sm" type="button" aria-label="Pause game">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board glass" id="board">
+          <canvas id="game-canvas"></canvas>
+
+          <!-- Countdown overlay (Ready / 3-2-1) -->
+          <div id="overlay-countdown" class="board-overlay" hidden>
+            <span id="countdown-number" class="countdown-number">3</span>
+          </div>
+
+          <!-- Pause overlay -->
+          <div id="overlay-pause" class="board-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="pause-title">
+            <div class="overlay-panel glass">
+              <h2 id="pause-title" class="overlay-panel__title">Paused</h2>
+              <p class="overlay-panel__subtitle">Take a breath. Vipera will wait.</p>
+              <div class="overlay-panel__actions">
+                <button id="btn-resume" class="btn btn--primary" type="button">Resume</button>
+                <button id="btn-restart-paused" class="btn btn--ghost" type="button">Restart</button>
+                <button id="btn-home-paused" class="btn btn--ghost" type="button">Home</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game over overlay -->
+          <div id="overlay-gameover" class="board-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="gameover-title">
+            <div class="overlay-panel glass">
+              <h2 id="gameover-title" class="overlay-panel__title overlay-panel__title--gameover">Game Over</h2>
+              <p id="gameover-newbest" class="overlay-panel__badge" hidden>✦ New High Score</p>
+              <div class="overlay-panel__score">
+                <span id="gameover-score" class="overlay-panel__score-value">0</span>
+                <span class="overlay-panel__score-label">points</span>
+              </div>
+              <p class="overlay-panel__subtitle">Best: <strong id="gameover-best">0</strong></p>
+              <div class="overlay-panel__actions">
+                <button id="btn-play-again" class="btn btn--primary" type="button">Play Again</button>
+                <button id="btn-home-gameover" class="btn btn--ghost" type="button">Home</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Touch controls (shown on touch-capable / narrow viewports) -->
+        <div class="touch-controls" id="touch-controls" aria-hidden="true">
+          <div class="dpad">
+            <button class="dpad__btn dpad__btn--up" data-dir="up" type="button" aria-label="Move up">
+              <svg viewBox="0 0 24 24"><path d="M12 5l7 7M12 5l-7 7M12 5v14" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dpad__btn dpad__btn--left" data-dir="left" type="button" aria-label="Move left">
+              <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dpad__btn dpad__btn--center" type="button" tabindex="-1" aria-hidden="true"></button>
+            <button class="dpad__btn dpad__btn--right" data-dir="right" type="button" aria-label="Move right">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="dpad__btn dpad__btn--down" data-dir="down" type="button" aria-label="Move down">
+              <svg viewBox="0 0 24 24"><path d="M12 19l7-7M12 19l-7-7M12 19V5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ SETTINGS MODAL ============ -->
+  <div id="settings-modal" class="modal-backdrop" hidden>
+    <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal__header">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-btn icon-btn--sm" id="btn-close-settings" type="button" aria-label="Close settings">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="setting-row">
+          <div>
+            <span class="setting-row__label">Sound effects</span>
+            <span class="setting-row__hint">Eat, turn, and collision sounds</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-sfx" checked />
+            <span class="switch__track"><span class="switch__thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <span class="setting-row__label">Background music</span>
+            <span class="setting-row__hint">Soft ambient loop while you play</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-music" />
+            <span class="switch__track"><span class="switch__thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <span class="setting-row__label">Grid lines</span>
+            <span class="setting-row__hint">Show the board grid</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-grid" checked />
+            <span class="switch__track"><span class="switch__thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <span class="setting-row__label">Screen edges</span>
+            <span class="setting-row__hint">Wrap around edges instead of colliding</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-wrap" />
+            <span class="switch__track"><span class="switch__thumb"></span></span>
+          </label>
+        </div>
+
+        <div class="setting-row setting-row--danger">
+          <div>
+            <span class="setting-row__label">Reset progress</span>
+            <span class="setting-row__hint">Clears high score and stats from this device</span>
+          </div>
+          <button id="btn-reset-data" class="btn btn--danger-ghost btn--sm" type="button">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOW TO PLAY MODAL ============ -->
+  <div id="howto-modal" class="modal-backdrop" hidden>
+    <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+      <div class="modal__header">
+        <h2 id="howto-title">How to play</h2>
+        <button class="icon-btn icon-btn--sm" id="btn-close-howto" type="button" aria-label="Close instructions">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <ul class="howto-list">
+          <li><strong>Desktop:</strong> Arrow keys or WASD to steer. Space to pause. F for fullscreen.</li>
+          <li><strong>Mobile / tablet:</strong> Use the on-screen D-pad, or swipe anywhere on the board.</li>
+          <li>Guide Vipera to each golden orb — every bite grows your length and your score.</li>
+          <li>Avoid colliding with your own tail. Choose Easy, Medium, or Hard for different speeds.</li>
+          <li>Your best score is saved automatically on this device.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live region for screen-reader announcements (score, game state) -->
+  <div id="sr-announcer" class="sr-only" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
